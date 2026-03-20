@@ -1,38 +1,7 @@
 blueprint:
   name: Zone Notification Extended
-  description: >
-
-    ✉️ notification when a person enters / leaves a zone
-
-    🎬 custom action when a person enters /leaves a zone
-
-    🎛️ modify your notifications in color, channel, group, ect.
-
-    📴 enable / disable notifications easily
-
-    ❌ custom condition for blocking / allowing notifications
-
-    🌎 notification button support to open a url, e.g. shopping list
-
-    ### Hints
-
-    If you want to test this automation, you need to change the state of an observed person. you can do this, in the developer options. Simply filter for your person entity, click on it and change the state to a zone used by this automation.
-
-
-    **Version**: 3.5.3
-
-    **Help & FAQ**: [Zone Notification Extended](https://community.home-assistant.io/t/zone-notification-extended)
-
-
-    If you like my work and support feel free to support me.
-
-    [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q3QEH52)
-    <a href="https://www.paypal.com/donate/?hosted_button_id=ZQ333L4BA3YLU">
-      <img src="https://raw.githubusercontent.com/andreostrovsky/donate-with-paypal/refs/heads/master/blue.svg"
-          width="200" alt="Donate with PayPal">
-    </a>
-    
-  source_url: "https://github.com/panhans/homeassistant/blob/main/blueprints/automation/panhans/zone_notification_extended.yaml"
+   
+  source_url: "https://github.com/andrewdolphin/Homeassistant_Blueprints/Blueprints/ad_zone_notifications.yaml"
   domain: automation
   homeassistant:
     min_version: 2023.8.0
@@ -209,7 +178,6 @@ variables:
 trigger:
   platform: state
   entity_id: !input persons
-  for: !input duration
 
 condition:
   - condition: template
