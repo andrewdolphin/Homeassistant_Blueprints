@@ -74,17 +74,6 @@ blueprint:
             domain: zone
           multiple: true
 
-    duration:
-      name: ⏱️ Duration
-      description: >
-        Duration the person must be in or out of the zone before notification gets fired.
-      default:
-        hours: 0
-        minutes: 0
-        seconds: 0
-      selector:
-        duration:
-
     notify_device:
       name: 📱 Device to notify
       description: >
@@ -97,15 +86,6 @@ blueprint:
         device:
           filter:
             integration: mobile_app
-
-    notify_group:
-      name: 📱📱 Notification Group
-      description: >
-        `optional`
-
-
-        If several devices are to receive a notification, a [notify group](https://www.home-assistant.io/integrations/group/#notify-groups) can be used. Enter *notify* for all devices. If 'Notification Group' is defined 'Device to notify' will be ignored."
-      default: ""
 
     title_arriving:
       name: "📩 Notification Arriving Title"
@@ -147,88 +127,6 @@ blueprint:
       selector:
         boolean:
 
-    status_bar_icon:
-      name: "🌠 Status Bar Icon"
-      description: >
-        `Android` `optional`
-
-
-        Sets the status bar icon.
-      default: mdi:map-marker
-      selector:
-        icon:
-          placeholder: mdi:map-marker
-
-    notification_color:
-      name: "🎨 Notification Color"
-      description: >
-        `Android` `optional`
-
-
-        Color of the notification
-      default: [100, 200, 240]
-      selector:
-        color_rgb:
-
-    channel:
-      name: "📭 Notification Channel"
-      description: >
-        `Android` `optional`
-
-
-        You can set a notification channel. In your companion app you can set e.g. a custom sound for notifications in this channel.
-      default: "General"
-
-    tag:
-      name: "🏷️ Notification Tag"
-      description: >
-        `Android` `optional`
-
-
-        A notification can replace an existing one if they share the same tag. You also can use variables like *person* or *zone*.
-        E.g. ˙zne-{person}˙ to only display the recent zone swtich of a single person. 
-      default: ''
-
-    group:
-      name: "📑 Notification Group"
-      description: >
-        `Android` `optional`
-
-
-        Group notifications by using this identifier.
-      default: "zone-notification-group"
-
-    vibration_pattern:
-      name: "📳 Vibration Pattern"
-      description: >
-        `Android` `optional`
-
-
-        Pattern of the vibration when notification arrives."
-      default: "100, 100"
-
-    led_color:
-      name: "💡 Notification LED Color"
-      description: >
-        `Android` `optional`
-
-
-        Color of the phone LED after incoming notification."
-      default: [100, 200, 240]
-      selector:
-        color_rgb:
-
-    critical_notification:
-      name: Critical Notification
-      description: >
-        `iOS`
-
-
-        If enabled notifications will appear no matter of phone state.
-      default: off
-      selector:
-        boolean:
-
     custom_conditions:
       name: "❌ Custom Conditions"
       description: >
@@ -262,51 +160,8 @@ blueprint:
       selector:
         condition:
 
-    custom_action_arriving:
-      name: "🎬 Entering Custom Action"
-      description: >
-        `optional`
-
-      
-        Custom action when a person enters a zone.
-      default: []
-      selector:
-        action: {}
-
-    custom_action_leaving:
-      name: "🎬 Leaving Custom Action"
-      description: >
-        `optional`
-
-      
-        Custom action when a person leaves a zone.
-      default: []
-      selector:
-        action: {}
-
-    custom_button_arriving_text:
-      name: "🎛️ Custom Button Text"
-      description: >
-        `optional`
-        
-      
-        Text for a custom button to navigate to open a URL, e.g. a lovelace view.
-        For arriving notifications.
-      default: ''
-
-    custom_button_arriving_url:
-      name: "🌎 Custom Button URL"
-      description: > 
-        `optional`
-
-        Lovelace path to your view or another URL. E.g. */todo?entity_id=todo.shoppinglist*
-        For arriving notifications.
-      default: ''
 
 variables:
-  custom_button_arriving_text: !input custom_button_arriving_text
-  custom_button_arriving_url: !input custom_button_arriving_url
-
   zone_inputs: !input zones
   zones: >
     {% if zone_inputs | count > 0 %}
@@ -344,21 +199,12 @@ variables:
     {{ friendly.name }}
 
   notify_device: !input notify_device
-  notify_group: !input notify_group
   notify_service: |
-    {% if(notify_group is defined and notify_group != '' ) %}
-      notify.{{ notify_group }}
-    {% elif (notify_device != none and notify_device != '' ) %}
-      notify.mobile_app_{{ device_attr(notify_device, "name") | slugify }}
-    {% endif %}
+    notify.mobile_app_{{ device_attr(notify_device, "name") | slugify }}
 
   is_arriving_notification_enabled: !input is_arriving_notification_enabled
   is_leaving_notification_enabled: !input is_leaving_notification_enabled
 
-  custom_action_arriving: !input custom_action_arriving
-  custom_action_leaving: !input custom_action_leaving
-
-  critical_notification: !input critical_notification
 
 trigger:
   platform: state
@@ -385,7 +231,6 @@ condition:
           - alias: "no leaving zones defined"
             condition: template
             value_template: "{{  zones_leaving | count > 0 }}"
-
   - condition: and
     conditions: !input custom_conditions
 
@@ -394,14 +239,8 @@ action:
       person: "{{ state_attr(trigger.entity_id,'friendly_name') }}"
       zone_from: "{{ iif(trigger.from_state.state | lower != not_home,iif(trigger.from_state.state | lower == home_zone_name,state_attr(home_zone,'friendly_name'),trigger.from_state.state),not_home) }}"
       zone_to: "{{ iif(trigger.to_state.state | lower != not_home,iif(trigger.to_state.state | lower == home_zone_name,state_attr(home_zone,'friendly_name'),trigger.to_state.state),not_home) }}"
-      notification_color: !input "notification_color"
-      notification_color_hex: "#{{ '%02x%02x%02x' | format(notification_color[0], notification_color[1], notification_color[2]) }}"
-      led_color: !input "led_color"
-      led_color_hex: "#{{ '%02x%02x%02x' | format(led_color[0], led_color[1], led_color[2]) }}"
       zone_names_arriving: "{{ zone_names }}"
       zone_names_leaving: "{{ iif(zones_leaving | count == 0, zone_names, zones_leaving_names) }}"
-      input_tag: !input tag
-      tag: "{{ iif(input_tag != '', input_tag, 'zne'+(range(1, 99999) | random | string)) }}"
 
   - if:
       - condition: template
@@ -422,14 +261,7 @@ action:
           data:
             ttl: 0
             priority: high
-            notification_icon: !input "status_bar_icon"
-            channel: !input "channel"
-            group: !input "group"
-            tag: "{{ tag }}"
-            color: "{{ notification_color_hex }}"
-            vibrationPattern: !input "vibration_pattern"
-            ledColor: "{{led_color_hex}}"
-
+            image: "/local/{{ person }}.png"
   - if:
       - condition: template
         value_template: "{{ zone_to in zone_names_arriving }}"
@@ -442,120 +274,12 @@ action:
     then:
       - variables:
           zone: "{{ zone_to }}"
-      - if:
-        - condition: template
-          value_template: "{{ custom_button_arriving_text == '' or custom_button_arriving_url == '' }}"
-        then:
-          - if:
-            - condition: template
-              value_template: "{{ critical_notification }}"
-            then:
-            - service: "{{ notify_service }}"
-              data:
-                title: !input title_arriving
-                message: !input message_arriving
-                data:
-                  ttl: 0
-                  priority: high
-                  notification_icon: !input "status_bar_icon"
-                  channel: !input "channel"
-                  group: !input "group"
-                  tag: "{{ tag }}"
-                  color: "{{ notification_color_hex }}"
-                  vibrationPattern: !input "vibration_pattern"
-                  ledColor: "{{led_color_hex}}"
-                  push:
-                    sound:
-                      name: "default"
-                      critical: 1
-                      volume: 1.0
-            else:
-            - service: "{{ notify_service }}"
-              data:
-                title: !input title_arriving
-                message: !input message_arriving
-                data:
-                  ttl: 0
-                  priority: high
-                  notification_icon: !input "status_bar_icon"
-                  channel: !input "channel"
-                  group: !input "group"
-                  tag: "{{ tag }}"
-                  color: "{{ notification_color_hex }}"
-                  vibrationPattern: !input "vibration_pattern"
-                  ledColor: "{{led_color_hex}}"
-        else:
-          - if:
-              - condition: template
-                value_template: "{{ critical_notification }}"
-            then:
-              - service: "{{ notify_service }}"
-                data:
-                  title: !input title_arriving
-                  message: !input message_arriving
-                  data:
-                    ttl: 0
-                    priority: high
-                    notification_icon: !input "status_bar_icon"
-                    channel: !input "channel"
-                    group: !input "group"
-                    tag: "{{ tag }}"
-                    color: "{{ notification_color_hex }}"
-                    vibrationPattern: !input "vibration_pattern"
-                    ledColor: "{{led_color_hex}}"
-                    push:
-                      sound:
-                        name: "default"
-                        critical: 1
-                        volume: 1.0
-                    actions:
-                      - action: URI
-                        title: !input custom_button_arriving_text
-                        uri: !input custom_button_arriving_url
-            else:
-              - service: "{{ notify_service }}"
-                data:
-                  title: !input title_arriving
-                  message: !input message_arriving
-                  data:
-                    ttl: 0
-                    priority: high
-                    notification_icon: !input "status_bar_icon"
-                    channel: !input "channel"
-                    group: !input "group"
-                    tag: "{{ tag }}"
-                    color: "{{ notification_color_hex }}"
-                    vibrationPattern: !input "vibration_pattern"
-                    ledColor: "{{led_color_hex}}"
-                    actions:
-                      - action: URI
-                        title: !input custom_button_arriving_text
-                        uri: !input custom_button_arriving_url
-
-  - if:
-      - condition: template
-        value_template: "{{ zone_from in zone_names_leaving }}"
-      - condition: template
-        value_template: "{{ custom_action_leaving is defined }}"
-      - condition: and
-        conditions: !input custom_conditions_leaving
-    then: 
-      - variables:
-          zone: "{{ zone_from }}"
-      - choose: []
-        default: !input "custom_action_leaving"
-
-  - if:
-      - condition: template
-        value_template: "{{ zone_to in zone_names_arriving }}"
-      - condition: template
-        value_template: "{{ custom_action_arriving is defined }}"
-      - condition: and
-        conditions: !input custom_conditions_arriving
-    then: 
-      - variables:
-          zone: "{{ zone_to }}"
-      - choose: []
-        default: !input "custom_action_arriving"
-
+      - service: "{{ notify_service }}"
+        data:
+          title: !input title_arriving
+          message: !input message_arriving
+          data:
+            ttl: 0
+            priority: high
+            image: "/local/{{ person }}.png"
 mode: parallel
