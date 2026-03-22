@@ -220,6 +220,13 @@ action:
       - condition: and
         conditions: !input custom_conditions_leaving
     then:
+      - delay:
+          seconds: 30
+      - if:
+          - condition: template
+            value_template: "{{ states(trigger.entity_id) == zone_from }}"
+        then:
+          - stop: "Person returned within 30 seconds; suppressing departure notification."
       - variables:
           zone: "{{ zone_from }}"
       - service: "{{ notify_service }}"
