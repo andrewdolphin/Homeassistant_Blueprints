@@ -247,6 +247,14 @@ action:
       - condition: and
         conditions: !input custom_conditions_arriving
     then:
+      - if:
+          - condition: template
+        # Check if they were arriving from 'not_home' and if that 'not_home' period was < 30s
+            value_template: >
+              {{ trigger.from_state.state == 'not_home' and 
+                 (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) < 30 }}
+        then:
+          - stop: "Person was away for less than 30 seconds; suppressing arrival notification."
       - variables:
           zone: "{{ zone_to }}"
       - service: "{{ notify_service }}"
