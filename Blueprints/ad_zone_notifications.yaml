@@ -178,6 +178,7 @@ variables:
 trigger:
   platform: state
   entity_id: !input persons
+  from: null
 
 condition:
   - condition: template
